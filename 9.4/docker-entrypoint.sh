@@ -218,6 +218,7 @@ if [[ ${PSQL_MODE} == standalone || ${PSQL_MODE} == master ]]; then
     else
       echo "Creating user \"${DB_USER}\"..."
       psql --username $DB_USER <<-EOSQL
+        ALTER ROLE "${DB_USER}" WITH PASSWORD '${DB_PASSWORD}';
         CREATE ROLE "${DB_USER}" WITH LOGIN CREATEDB PASSWORD '${DB_PASSWORD}';
 			EOSQL
     fi
@@ -239,10 +240,6 @@ if [[ ${PSQL_MODE} == standalone || ${PSQL_MODE} == master ]]; then
 
       if [[ -n ${DB_USER} ]]; then
         echo "Granting access to database \"${db}\" for user \"${DB_USER}\"..."
-        #echo "GRANT ALL PRIVILEGES ON DATABASE \"${db}\" to \"${DB_USER}\";" |
-          #sudo -Hu ${DB_USER} ${PG_BINDIR}/postgres \
-            #-D ${PG_DATADIR} -c config_file=${PG_CONFDIR}/postgresql.conf >/dev/null
-
         psql --username $DB_USER <<-EOSQL
           GRANT ALL PRIVILEGES ON DATABASE "${db}" to "${DB_USER}";
 				EOSQL
