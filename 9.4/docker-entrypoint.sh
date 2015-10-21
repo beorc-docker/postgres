@@ -204,7 +204,7 @@ if [[ ${PSQL_MODE} == standalone || ${PSQL_MODE} == master ]]; then
 
       psql --username $DB_USER <<-EOSQL
         CREATE ROLE "${REPLICATION_USER}" WITH REPLICATION LOGIN ENCRYPTED PASSWORD '${REPLICATION_PASSWORD}';
-      EOSQL
+			EOSQL
     fi
   fi
 
@@ -219,7 +219,7 @@ if [[ ${PSQL_MODE} == standalone || ${PSQL_MODE} == master ]]; then
       echo "Creating user \"${DB_USER}\"..."
       psql --username $DB_USER <<-EOSQL
         CREATE ROLE "${DB_USER}" WITH LOGIN CREATEDB PASSWORD '${DB_PASSWORD}';
-      EOSQL
+			EOSQL
     fi
   fi
 
@@ -228,7 +228,7 @@ if [[ ${PSQL_MODE} == standalone || ${PSQL_MODE} == master ]]; then
       echo "Creating database \"${db}\"..."
       psql --username $DB_USER <<-EOSQL
         CREATE DATABASE "${db}";
-      EOSQL
+			EOSQL
 
       if [[ ${DB_UNACCENT} == true ]]; then
         echo "Installing unaccent extension..."
@@ -245,7 +245,7 @@ if [[ ${PSQL_MODE} == standalone || ${PSQL_MODE} == master ]]; then
 
         psql --username $DB_USER <<-EOSQL
           GRANT ALL PRIVILEGES ON DATABASE "${db}" to "${DB_USER}";
-        EOSQL
+				EOSQL
       fi
     done
   fi
