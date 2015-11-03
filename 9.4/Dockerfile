@@ -32,6 +32,6 @@ COPY docker-entrypoint.sh /sbin/docker-entrypoint.sh
 RUN chmod 755 /sbin/docker-entrypoint.sh
 
 EXPOSE 5432/tcp
-VOLUME [$PG_HOME, $PG_LOGDIR]
+VOLUME $PG_HOME $PG_LOGDIR
 ENTRYPOINT ["/sbin/docker-entrypoint.sh"]
 CMD ["postgres"]
