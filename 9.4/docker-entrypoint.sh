@@ -63,6 +63,10 @@ create_run_dir
 # fix ownership of ${PG_CONFDIR} (may be necessary if USERMAP_* was set)
 chown -R ${DB_USER}:${DB_USER} ${PG_CONFDIR}
 
+sed "s/lc_monetary = 'en_US.UTF-8'/lc_monetary = '$DB_LOCALE'/" -i ${PG_CONFDIR}/postgresql.conf
+sed "s/lc_numeric = 'en_US.UTF-8'/lc_numeric = '$DB_LOCALE'/" -i ${PG_CONFDIR}/postgresql.conf
+sed "s/lc_time = 'en_US.UTF-8'/lc_time = '$DB_LOCALE'/" -i ${PG_CONFDIR}/postgresql.conf
+
 if [[ ${PSQL_SSLMODE} == disable ]]; then
   sed 's/ssl = true/#ssl = true/' -i ${PG_CONFDIR}/postgresql.conf
 fi
@@ -146,14 +150,9 @@ EOF
     # check if we need to perform data migration
     PG_OLD_VERSION=$(find ${PG_HOME}/[0-9].[0-9]/main -maxdepth 1 -name PG_VERSION 2>/dev/null | sort -r | head -n1 | cut -d'/' -f5)
 
-    if [[ $DB_LOCALE != C ]]; then
-      echo "Generating required locale \"${DB_LOCALE}\"..."
-      locale-gen ${DB_LOCALE} >/dev/null
-    fi
-
     echo "Initializing database..."
     sudo -Hu ${DB_USER} ${PG_BINDIR}/initdb --pgdata=${PG_DATADIR} \
-      --username=${DB_USER} --encoding=unicode --locale=${DB_LOCALE} --auth=trust >/dev/null
+      --username=${DB_USER} --encoding=unicode --locale=en_US.UTF-8 --auth=trust >/dev/null
   fi
 fi
 
@@ -198,10 +197,6 @@ if [[ ${PSQL_MODE} == standalone || ${PSQL_MODE} == master ]]; then
       DB_USER=
     else
       echo "Creating user \"${REPLICATION_USER}\"..."
-      echo "CREATE ROLE \"${REPLICATION_USER}\" WITH REPLICATION LOGIN ENCRYPTED PASSWORD '${REPLICATION_PASSWORD}';" |
-        sudo -Hu ${DB_USER} ${PG_BINDIR}/postgres \
-          -D ${PG_DATADIR} -c config_file=${PG_CONFDIR}/postgresql.conf >/dev/null
-
       psql --username $DB_USER <<-EOSQL
         CREATE ROLE "${REPLICATION_USER}" WITH REPLICATION LOGIN ENCRYPTED PASSWORD '${REPLICATION_PASSWORD}';
 			EOSQL
@@ -233,9 +228,9 @@ if [[ ${PSQL_MODE} == standalone || ${PSQL_MODE} == master ]]; then
 
       if [[ ${DB_UNACCENT} == true ]]; then
         echo "Installing unaccent extension..."
-        echo "CREATE EXTENSION IF NOT EXISTS unaccent;" | \
-          sudo -Hu ${DB_USER} ${PG_BINDIR}/postgres ${db} \
-            -D ${PG_DATADIR} -c config_file=${PG_CONFDIR}/postgresql.conf >/dev/null
+        psql --username $DB_USER <<-EOSQL
+          CREATE EXTENSION IF NOT EXISTS unaccent;
+				EOSQL
       fi
 
       if [[ -n ${DB_USER} ]]; then

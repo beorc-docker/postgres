@@ -1,7 +1,5 @@
 FROM ubuntu:trusty
 
-MAINTAINER Yury Kotov <bairkan@yandex.ru>
-
 ENV PG_VERSION 9.4
 ENV PG_HOME /var/lib/postgresql
 ENV PG_RUNDIR /run/postgresql
@@ -12,14 +10,12 @@ ENV PG_CONFDIR "/etc/postgresql/${PG_VERSION}/main"
 ENV PG_BINDIR "/usr/lib/postgresql/${PG_VERSION}/bin"
 ENV PG_DATADIR "${PG_HOME}/${PG_VERSION}/main"
 
-ENV LANGUAGE $DB_LOCALE
-ENV LANG $DB_LOCALE
-ENV LC_ALL $DB_LOCALE
+RUN apt-get update -qq && apt-get install -y locales wget
 
-RUN apt-get -qy install language-pack-en wget
-
-RUN echo 'LANGUAGE="$DB_LOCALE"' >> /etc/default/locale
-RUN echo 'LC_ALL="$DB_LOCALE"' >> /etc/default/locale
+RUN dpkg-reconfigure locales && \
+    locale-gen $DB_LOCALE && \
+    locale-gen en_US.UTF-8 && \
+    /usr/sbin/update-locale LANG=en_US.UTF-8
 
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
  && echo 'deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main' > /etc/apt/sources.list.d/pgdg.list \
@@ -28,7 +24,7 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-k
  && rm -rf ${PG_HOME} \
  && rm -rf /var/lib/apt/lists/*
 
-COPY docker-entrypoint.sh /sbin/docker-entrypoint.sh
+COPY docker-entrypoint.db.sh /sbin/docker-entrypoint.sh
 RUN chmod 755 /sbin/docker-entrypoint.sh
 
 EXPOSE 5432/tcp
